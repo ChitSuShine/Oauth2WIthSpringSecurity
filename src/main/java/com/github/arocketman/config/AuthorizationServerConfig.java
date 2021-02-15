@@ -1,6 +1,7 @@
 package com.github.arocketman.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,20 +26,27 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Value("${config.oauth2.clientId}")
+    private String clientId;
+
+    @Value("${config.oauth2.clientSecret}")
+    private String clientSecret;
+
     /**
      * Setting up the endpointsconfigurer authentication manager.
      * The AuthorizationServerEndpointsConfigurer defines the authorization and token endpoints and the token services.
+     *
      * @param endpoints
      * @throws Exception
      */
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        endpoints
-                .authenticationManager(authenticationManager);
+        endpoints.authenticationManager(authenticationManager);
     }
 
     /**
      * Setting up the clients with a clientId, a clientSecret, a scope, the grant types and the authorities.
+     *
      * @param clients
      * @throws Exception
      */
@@ -46,26 +54,24 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         clients
                 .inMemory()
-                .withClient("my-trusted-client")
+                .withClient(clientId)
                 .authorizedGrantTypes("client_credentials", "password")
-                .authorities("ROLE_CLIENT","ROLE_TRUSTED_CLIENT")
-                .scopes("read","write","trust")
+                .authorities("ROLE_CLIENT", "ROLE_TRUSTED_CLIENT")
+                .scopes("read", "write", "trust")
                 .resourceIds("oauth2-resource")
                 .accessTokenValiditySeconds(30)
-                .secret(passwordEncoder.encode("secret"));
+                .secret(passwordEncoder.encode(clientSecret));
     }
 
     /**
      * We here defines the security constraints on the token endpoint.
      * We set it up to isAuthenticated, which returns true if the user is not anonymous
+     *
      * @param security the AuthorizationServerSecurityConfigurer.
      * @throws Exception
      */
     @Override
     public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-        security
-                .checkTokenAccess("isAuthenticated()");
+        security.checkTokenAccess("isAuthenticated()");
     }
-
-
 }

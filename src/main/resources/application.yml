@@ -12,3 +12,7 @@ security:
     oauth2:
       resource:
         filter-order: 3
+config:
+  oauth2:
+    clientId: my-trusted-client
+    clientSecret: secret
